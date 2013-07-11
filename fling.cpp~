@@ -1,0 +1,33 @@
+//NOTE: bitwise operations do not roll over to the next element in the char array.
+//This is a Good Thing.
+
+
+class Field {
+	public:
+		Field(char*, int, int);
+		void set(int);
+		void set(char*);
+		void set(char);
+	private:
+		char *position;
+		uint8_t bitOffset;
+		uint8_t bitWidth;
+};
+
+class fullField : public Field {
+	public:
+		fullField (unsigned char*);
+		void set(unsigned char);
+		void get();
+	
+}	
+Field::Field(char* pos, uint8_t offset, uint8_t width){
+	position = pos;
+	bitOffset = offset;
+	bitWidth = width;
+}
+
+Field::set(char value){	
+	*position = value; 
+	
+}

@@ -39,9 +39,14 @@ Field::Field(char* pos, uint8_t offset, uint8_t width){
   position = pos;
   bitOffset = offset;
   bitWidth = width;
+  if((bitWidth + bitOffset) > 8){
+    perror("Field construction error: invalid offset or width.");
+    exit(0);
+  }
+
   uint8_t mask_assist = '\x80';//1000 0000
   //move our 1 to the beginning of the field
-  mask_assist >> bitOffset;
+  mask_assist = mask_assist >> bitOffset;
   //now, having acquired the specifications for the field,
   //we use those specs to create a bitmask for altering it.
   mask = 0;// 0000 0000
@@ -50,8 +55,6 @@ Field::Field(char* pos, uint8_t offset, uint8_t width){
     mask_assist = mask_assist >> 1;
     mask = mask | mask_assist;    
   }
-  mask = mask ^ mask;
-  //we invert, to make zeroing out the field easier later
 }
 
 /*
@@ -62,11 +65,12 @@ Field::Field(char* pos, uint8_t offset, uint8_t width){
 */
 //for straight-up integers
 void Field::mute(uint8_t value){	
-  *position = (*position) ^ mask;
-  //There, see how easy that was?
+  *position = (*position) & (~mask);
+  //and the original with the inverted mask, to clear the appropriate 
+  //segment of the field
   value = value << 8 - bitWidth;
   value = value >> bitOffset;  
-  value = value & (mask ^ mask);
+  value = value & mask;
   *position = (*position) | value;
 }
 //just autocasts the char.
@@ -89,6 +93,8 @@ void Field::operator=(char* value){
 }
 
 //these guys
+uint8_t Field::get();
+//forgot about this one.  We will need to actually find out what the hell the thing is
 uint8_t Field::operator+(uint8_t rVal);
 uint8_t Field::operator-(uint8_t rVal);
 uint8_t Field::operator*(uint8_t rVal);
@@ -100,9 +106,48 @@ uint8_t Field::operator-=();
 uint8_t Field::operator==();
 
 
+uint8_t Field::get(){
+  //extract value
+  uint8_t temp = (*position) & mask;
+  //shift to the left until it's in the most significant column
+  temp = temp << bitOffset;
+  //shift to the right until it ends in the least significant column
+  temp = temp >> (8 - bitWidth);
+  //return that value
+  return temp;
+}
 
+uint8_t Field::operator+(uint8_t rVal){
+  uint8_t temp = get();
+  temp = temp + rVal;
+  if (temp > (1 << (bitWidth) - 1) ){
+    perror("Overflow in the course of Field addition");    
+    //we overflowed, warn them!
+  } 
+  return temp;
+}
 
+uint8_t Field::operator++(){
+  uint8_t temp = get();
+  temp = temp + 1;
+  if (temp > (1 << (bitWidth) - 1) ){
+    perror("Overflow in the course of Field addition");    
+    //we overflowed, warn them!
+  }
+  mute(temp);  
+  return temp;
+}
 
+uint8_t Field::operator+=(uint8_t rVal){
+  uint8_t temp = get();
+  temp = temp + rVal;
+  if (temp > (1 << (bitWidth) - 1) ){
+    perror("Overflow in the course of Field addition");    
+    //we overflowed, warn them!
+  }
+  mute(temp);  
+  return temp;
+}
 
 
 

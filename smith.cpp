@@ -69,6 +69,7 @@ int main(int argc, char *argv[]){
     }
     lineNo++;
     if((!strncmp(line,"//", 2))&&(strlen(line)<2)){
+      free(&line);
       continue;//on blank line or comment
     }
     //else tokenize

@@ -4,15 +4,19 @@
 #define dash "-"
 using namespace std;
 int getLine(char **line, FILE *file);
+int tokenize(char *linePrint, FILE output);
 int main(int argc, char *argv[]){
   int ch = 0;
   bool sanity = false;//run sanity check
   bool xTern = false;//specify extra filename
   bool verbose = false;// verbose mode, gives more details.
+  bool details = false;
+  bool fields = false;
   char *fileName= "lib.conf";
   char *fileOut = "out.h";
   char *line;
   FILE *conf;
+  FILE *out;
   const char *usage = "Usage: ./pacSmith -(sx) [lib.conf]";
   const char *welcome = "Running libPacSmith, the libPacForge extender.";
   while( (ch = getopt(argc, argv, "svx:")) != -1) {
@@ -58,6 +62,8 @@ int main(int argc, char *argv[]){
     if(sanity){
       cout<<"You have furthermore selected test-run mode, ";
       cout<<"which writes output to out.h"<<endl;
+      out = fopen("out.h", "w");
+      //open up out.h
       //we write to a different file
     }
   }
@@ -65,13 +71,26 @@ int main(int argc, char *argv[]){
   int lineNo=0;
   while(!(ret = getLine(&line, conf))){
     if(verbose){
-      cout<<"Line #"<<lineNo<<": " <<line<<endl;
+      cout<<"Line #"<<(++lineNo)<<": " <<line<<endl;
     }
-    lineNo++;
     if((!strncmp(line,"//", 2))&&(strlen(line)<2)){
       free(&line);
       continue;//on blank line or comment
     }
+    if(!details){
+      if(!strncmp(line, "/details/", 9)){
+	details = true;
+      }
+    }
+    if(details&&(!fields)){
+      if(!strncmp(line, "/fields/", 8)){
+	details = false;
+	field = true;
+      }
+    }
+
+
+    //if we find a /fields/ section, set fields = 1;
     //else tokenize
     //if it's an asterisk we switch state (realloc?)
     //now that we have a line, we process it, keeping track of any variables. 
@@ -83,6 +102,7 @@ int main(int argc, char *argv[]){
   //we can match variables later
 
   fclose(conf);
+  fclose(out);
 
 }
 
@@ -114,5 +134,11 @@ int getLine(char **lineOut, FILE *file){
   }
   line[++i] = '\0';
   *lineOut = line;
+  return 0;
+}
+
+int tokenize(char *linePrint, FILE output){
+  if(
+
   return 0;
 }
